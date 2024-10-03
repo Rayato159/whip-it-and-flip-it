@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://dbipk8wmxqprl"]
+[gd_scene load_steps=8 format=3 uid="uid://ck45mcpanbyoj"]
 
 [ext_resource type="Texture2D" uid="uid://btno60b61eype" path="res://Assets/Actor/Characters/Samurai/SpriteSheet.png" id="2_2fjhe"]
 
@@ -61,7 +61,7 @@ radius = 7.0
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_6n07h")
-animation = &"back_idle"
+animation = &"front_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 1)
