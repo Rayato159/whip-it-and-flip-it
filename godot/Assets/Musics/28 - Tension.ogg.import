@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dwlpqg1ah23kc"
+path="res://.godot/imported/28 - Tension.ogg-c377775fcbc442afe074f4894288a7fe.oggvorbisstr"
+
+[deps]
+
+source_file="res://Assets/Musics/28 - Tension.ogg"
+dest_files=["res://.godot/imported/28 - Tension.ogg-c377775fcbc442afe074f4894288a7fe.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
