@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -145,25 +145,22 @@ impl ICharacterBody2D for Player {
         let keys = Rc::clone(&self.keys);
         let key_state = &self.key_state;
 
-        match event.try_cast::<InputEventKey>() {
-            Ok(e) => {
-                if e.is_pressed() {
-                    keys.iter().for_each(|k| {
-                        if e.get_keycode() == *k {
-                            key_state.borrow_mut().insert(*k, true);
-                        }
-                    });
-                }
-
-                if e.is_released() {
-                    keys.iter().for_each(|k| {
-                        if e.get_keycode() == *k {
-                            key_state.borrow_mut().insert(*k, false);
-                        }
-                    });
-                }
+        if let Ok(e) = event.try_cast::<InputEventKey>() {
+            if e.is_pressed() {
+                keys.iter().for_each(|k| {
+                    if e.get_keycode() == *k {
+                        key_state.borrow_mut().insert(*k, true);
+                    }
+                });
             }
-            Err(_) => {}
+
+            if e.is_released() {
+                keys.iter().for_each(|k| {
+                    if e.get_keycode() == *k {
+                        key_state.borrow_mut().insert(*k, false);
+                    }
+                });
+            }
         }
     }
 }
