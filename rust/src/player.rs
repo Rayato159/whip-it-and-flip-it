@@ -109,8 +109,6 @@ impl ICharacterBody2D for Player {
     }
 
     fn physics_process(&mut self, delta: f64) {
-        godot_print!("{:?}", self.key_state.borrow());
-
         let keys = Rc::clone(&self.keys);
         let key_state = &self.key_state;
 
