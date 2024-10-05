@@ -17,6 +17,8 @@ pub struct Player {
     keys: Rc<Vec<Key>>,
     base: Base<CharacterBody2D>,
     animation_node: Option<RefCell<Gd<AnimatedSprite2D>>>,
+    idle_animation_map: Rc<HashMap<StringName, StringName>>,
+    animation_state: Rc<RefCell<StringName>>,
 }
 
 #[godot_api]
@@ -45,32 +47,33 @@ impl Player {
     }
 
     #[func]
-    fn change_direction_animation(&mut self) {
-        if let Some(animation_node) = &self.animation_node {
-            match self.direction {
-                Vector2::UP => {
-                    animation_node
-                        .borrow_mut()
-                        .set_animation("back_idle".into());
-                }
-                Vector2::RIGHT => {
-                    animation_node
-                        .borrow_mut()
-                        .set_animation("right_idle".into());
-                }
-                Vector2::DOWN => {
-                    animation_node
-                        .borrow_mut()
-                        .set_animation("front_idle".into());
-                }
-                Vector2::LEFT => {
-                    animation_node
-                        .borrow_mut()
-                        .set_animation("left_idle".into());
-                }
-                _ => {}
-            }
+    fn play_walk_animation(&mut self, velocity: Vector2) {
+        if velocity.x > 0. {
+            self.set_animation("right_walk".into());
+            self.animation_state.replace("right_walk".into());
+        } else if velocity.x < 0. {
+            self.set_animation("left_walk".into());
+            self.animation_state.replace("left_walk".into());
         }
+
+        if velocity.y < 0. {
+            self.set_animation("back_walk".into());
+            self.animation_state.replace("back_walk".into());
+        } else if velocity.y > 0. {
+            self.set_animation("front_walk".into());
+            self.animation_state.replace("front_walk".into());
+        }
+
+        self.play_animation();
+    }
+
+    #[func]
+    fn play_idle_animation(&mut self) {
+        let animation_state = self.animation_state.borrow().clone();
+        if let Some(idle_animation) = self.idle_animation_map.get(&animation_state) {
+            self.set_animation(idle_animation.clone());
+            self.play_animation();
+        };
     }
 
     #[func]
@@ -80,6 +83,12 @@ impl Player {
 
         self.base_mut().set_position(transition);
         self.base_mut().move_and_slide();
+
+        if velocity != Vector2::ZERO {
+            self.play_walk_animation(velocity);
+        } else {
+            self.play_idle_animation();
+        }
     }
 
     #[func]
@@ -146,20 +155,26 @@ impl ICharacterBody2D for Player {
             keys: Rc::new(vec![Key::W, Key::D, Key::S, Key::A]),
             base,
             animation_node: None,
+            idle_animation_map: Rc::new(HashMap::from([
+                ("front_walk".into(), "front_idle".into()),
+                ("back_walk".into(), "back_idle".into()),
+                ("left_walk".into(), "left_idle".into()),
+                ("right_walk".into(), "right_idle".into()),
+            ])),
+            animation_state: Rc::new(RefCell::new("front_idle".into())),
         }
     }
 
     fn ready(&mut self) {
+        let init_animation = self.animation_state.borrow().clone();
+
         self.init_animation_node();
-        self.set_animation("front_idle".into());
+        self.set_animation(init_animation);
     }
 
     fn physics_process(&mut self, delta: f64) {
         self.walk_controller();
-
         self.walk(self.direction * self.speed * delta as f32);
-        self.change_direction_animation();
-        self.play_animation();
     }
 
     fn input(&mut self, event: Gd<InputEvent>) {
