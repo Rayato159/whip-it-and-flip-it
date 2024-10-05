@@ -22,19 +22,10 @@ pub struct Player {
 #[godot_api]
 impl Player {
     #[func]
-    fn walk(&mut self, velocity: Vector2) {
-        let position = self.base_mut().get_position();
-        let transition = position + velocity;
-
-        self.base_mut().set_position(transition);
-        self.base_mut().move_and_slide();
-    }
-
-    #[func]
     fn init_animation_node(&mut self) {
         let animation_node = self
             .base_mut()
-            .get_node_as::<AnimatedSprite2D>("CharacterBody2D/AnimatedSprite2D");
+            .get_node_as::<AnimatedSprite2D>("AnimatedSprite2D");
 
         self.animation_node = Some(RefCell::new(animation_node));
     }
@@ -79,9 +70,64 @@ impl Player {
                 }
                 _ => {}
             }
-
-            animation_node.borrow_mut().play();
         }
+    }
+
+    #[func]
+    fn walk(&mut self, velocity: Vector2) {
+        let position = self.base_mut().get_position();
+        let transition = position + velocity;
+
+        self.base_mut().set_position(transition);
+        self.base_mut().move_and_slide();
+    }
+
+    #[func]
+    fn walk_controller(&mut self) {
+        let keys = Rc::clone(&self.keys);
+        let key_state = &self.key_state;
+
+        // Stoping logic
+        keys.iter().for_each(|k| {
+            let state = match key_state.borrow_mut().get(k) {
+                Some(state) => *state,
+                None => return,
+            };
+
+            if !state {
+                match *k {
+                    Key::W => self.direction.y = 0.,
+                    Key::D => self.direction.x = 0.,
+                    Key::S => self.direction.y = 0.,
+                    Key::A => self.direction.x = 0.,
+                    _ => {}
+                };
+            }
+        });
+
+        // Moving logic
+        let count = key_state.borrow().iter().filter(|(_, &v)| v).count();
+
+        keys.iter().for_each(|k| {
+            let state = match key_state.borrow_mut().get(k) {
+                Some(state) => *state,
+                None => return,
+            };
+
+            if state {
+                match *k {
+                    Key::W => self.direction.y = -1.,
+                    Key::D => self.direction.x = 1.,
+                    Key::S => self.direction.y = 1.,
+                    Key::A => self.direction.x = -1.,
+                    _ => {}
+                };
+
+                if count > 1 {
+                    self.direction = self.direction.normalized();
+                }
+            }
+        });
     }
 }
 
@@ -89,7 +135,7 @@ impl Player {
 impl ICharacterBody2D for Player {
     fn init(base: Base<CharacterBody2D>) -> Self {
         Self {
-            speed: 300.0,
+            speed: 180.0,
             direction: Vector2::ZERO,
             key_state: RefCell::new(HashMap::from([
                 (Key::W, false),
@@ -109,36 +155,11 @@ impl ICharacterBody2D for Player {
     }
 
     fn physics_process(&mut self, delta: f64) {
-        let keys = Rc::clone(&self.keys);
-        let key_state = &self.key_state;
-
-        if keys
-            .iter()
-            .all(|k| !key_state.borrow().get(k).unwrap_or(&false))
-        {
-            self.direction = Vector2::ZERO;
-            return;
-        }
-
-        keys.iter().for_each(|k| {
-            let state = match key_state.borrow_mut().get(k) {
-                Some(state) => *state,
-                None => return,
-            };
-
-            if state {
-                match *k {
-                    Key::W => self.direction = Vector2::UP,
-                    Key::D => self.direction = Vector2::RIGHT,
-                    Key::S => self.direction = Vector2::DOWN,
-                    Key::A => self.direction = Vector2::LEFT,
-                    _ => {}
-                };
-            }
-        });
+        self.walk_controller();
 
         self.walk(self.direction * self.speed * delta as f32);
         self.change_direction_animation();
+        self.play_animation();
     }
 
     fn input(&mut self, event: Gd<InputEvent>) {
