@@ -1,0 +1,12 @@
+[gd_resource type="Item" load_steps=3 format=3 uid="uid://cogfknxrpk7rr"]
+
+[ext_resource type="Shape2D" uid="uid://1vv7ffm2dlcc" path="res://Resources/GoldCoin/gold_coin_collision_shape.tres" id="1_hbken"]
+[ext_resource type="Texture2D" uid="uid://cg2cwjxitmqkc" path="res://Assets/Items/Treasure/GoldCoin.png" id="2_ba1el"]
+
+[resource]
+name = "Gold Coin"
+price = 1
+limit = 100
+collision_shape = ExtResource("1_hbken")
+texture = ExtResource("2_ba1el")
+side_texture = ExtResource("2_ba1el")

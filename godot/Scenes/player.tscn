@@ -1,6 +1,7 @@
 [gd_scene load_steps=24 format=3 uid="uid://ck45mcpanbyoj"]
 
 [ext_resource type="Texture2D" uid="uid://w4ro00qgtisk" path="res://Assets/Actor/Characters/SamuraiRed/redsamurai.png" id="2_eyrd7"]
+[ext_resource type="Shape2D" uid="uid://dyw02iebtdbqa" path="res://Resources/Player/player_collision_shape.tres" id="2_hjdif"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_b4ga4"]
 atlas = ExtResource("2_eyrd7")
@@ -185,9 +186,6 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_774no"]
-radius = 7.0
-
 [node name="Player" type="Player"]
 collision_mask = 6
 
@@ -198,7 +196,13 @@ animation = &"back_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 1)
-shape = SubResource("CircleShape2D_774no")
+shape = ExtResource("2_hjdif")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(3, 3)
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(0, 1)
+shape = ExtResource("2_hjdif")

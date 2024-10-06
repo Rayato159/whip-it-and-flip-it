@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use godot::classes::{
-    AnimatedSprite2D, CharacterBody2D, ICharacterBody2D, InputEvent, InputEventKey,
+    AnimatedSprite2D, Area2D, CharacterBody2D, ICharacterBody2D, InputEvent, InputEventKey,
 };
 use godot::global::Key;
 use godot::prelude::*;
@@ -13,10 +13,11 @@ use godot::prelude::*;
 pub struct Player {
     speed: f32,
     direction: Vector2,
-    key_state: RefCell<HashMap<Key, bool>>,
+    key_state: Rc<RefCell<HashMap<Key, bool>>>,
     keys: Rc<Vec<Key>>,
     base: Base<CharacterBody2D>,
-    animation_node: Option<RefCell<Gd<AnimatedSprite2D>>>,
+    animation_node: Option<Rc<RefCell<Gd<AnimatedSprite2D>>>>,
+    area2d_node: Option<Rc<Gd<Area2D>>>,
     idle_animation_map: Rc<HashMap<StringName, StringName>>,
     animation_state: Rc<RefCell<StringName>>,
 }
@@ -29,7 +30,14 @@ impl Player {
             .base_mut()
             .get_node_as::<AnimatedSprite2D>("AnimatedSprite2D");
 
-        self.animation_node = Some(RefCell::new(animation_node));
+        self.animation_node = Some(Rc::new(RefCell::new(animation_node)));
+    }
+
+    #[func]
+    fn init_area2d_node(&mut self) {
+        let area2d_node = self.base_mut().get_node_as::<Area2D>("Area2D");
+
+        self.area2d_node = Some(Rc::new(area2d_node));
     }
 
     #[func]
@@ -146,15 +154,16 @@ impl ICharacterBody2D for Player {
         Self {
             speed: 180.0,
             direction: Vector2::ZERO,
-            key_state: RefCell::new(HashMap::from([
+            key_state: Rc::new(RefCell::new(HashMap::from([
                 (Key::W, false),
                 (Key::D, false),
                 (Key::S, false),
                 (Key::A, false),
-            ])),
+            ]))),
             keys: Rc::new(vec![Key::W, Key::D, Key::S, Key::A]),
             base,
             animation_node: None,
+            area2d_node: None,
             idle_animation_map: Rc::new(HashMap::from([
                 ("front_walk".into(), "front_idle".into()),
                 ("back_walk".into(), "back_idle".into()),
@@ -170,6 +179,8 @@ impl ICharacterBody2D for Player {
 
         self.init_animation_node();
         self.set_animation(init_animation);
+
+        self.init_area2d_node();
     }
 
     fn physics_process(&mut self, delta: f64) {
