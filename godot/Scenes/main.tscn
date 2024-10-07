@@ -18,7 +18,6 @@ tile_map_data = PackedByteArray("AAAPAPb/AwALABUAAAAPAPX/AwALABQAAAAPAPT/AwALABQ
 tile_set = ExtResource("1_wqacm")
 
 [node name="PickUpItem" parent="." instance=ExtResource("3_xcux7")]
-item = null
 position = Vector2(-121, 89)
 
 [node name="Player" parent="." instance=ExtResource("2_3nuel")]

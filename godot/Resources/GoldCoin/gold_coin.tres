@@ -9,4 +9,3 @@ price = 1
 limit = 100
 collision_shape = ExtResource("1_hbken")
 texture = ExtResource("2_ba1el")
-side_texture = ExtResource("2_ba1el")

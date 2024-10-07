@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use godot::classes::{
-    AnimatedSprite2D, Area2D, CharacterBody2D, ICharacterBody2D, InputEvent, InputEventKey,
+    AnimatedSprite2D, Area2D, CharacterBody2D, CollisionShape2D, ICharacterBody2D, InputEvent,
+    InputEventKey,
 };
 use godot::global::Key;
 use godot::prelude::*;
@@ -16,42 +17,36 @@ pub struct Player {
     key_state: Rc<RefCell<HashMap<Key, bool>>>,
     keys: Rc<Vec<Key>>,
     base: Base<CharacterBody2D>,
-    animation_node: Option<Rc<RefCell<Gd<AnimatedSprite2D>>>>,
-    area2d_node: Option<Rc<Gd<Area2D>>>,
+    animation_node: Rc<RefCell<Option<Gd<AnimatedSprite2D>>>>,
+    collision_shape2d_node: Rc<Option<Gd<CollisionShape2D>>>,
+    area2d: Rc<Option<Gd<Area2D>>>,
     idle_animation_map: Rc<HashMap<StringName, StringName>>,
     animation_state: Rc<RefCell<StringName>>,
 }
 
 #[godot_api]
 impl Player {
-    #[func]
-    fn init_animation_node(&mut self) {
-        let animation_node = self
-            .base_mut()
-            .get_node_as::<AnimatedSprite2D>("AnimatedSprite2D");
-
-        self.animation_node = Some(Rc::new(RefCell::new(animation_node)));
-    }
-
-    #[func]
-    fn init_area2d_node(&mut self) {
-        let area2d_node = self.base_mut().get_node_as::<Area2D>("Area2D");
-
-        self.area2d_node = Some(Rc::new(area2d_node));
-    }
+    #[signal]
+    fn on_area2d_entered(&mut self);
 
     #[func]
     fn set_animation(&mut self, animation: StringName) {
-        if let Some(animation_node) = &self.animation_node {
-            animation_node.borrow_mut().set_animation(animation);
-        }
+        let animation_node = Rc::clone(&self.animation_node);
+        let animation_node_borrow_mut = &mut *animation_node.borrow_mut();
+
+        if let Some(node) = animation_node_borrow_mut {
+            node.set_animation(animation)
+        };
     }
 
     #[func]
     fn play_animation(&mut self) {
-        if let Some(animation_node) = &self.animation_node {
-            animation_node.borrow_mut().play();
-        }
+        let animation_node = Rc::clone(&self.animation_node);
+        let animation_node_borrow_mut = &mut *animation_node.borrow_mut();
+
+        if let Some(node) = animation_node_borrow_mut {
+            node.play();
+        };
     }
 
     #[func]
@@ -77,9 +72,13 @@ impl Player {
 
     #[func]
     fn play_idle_animation(&mut self) {
-        let animation_state = self.animation_state.borrow().clone();
-        if let Some(idle_animation) = self.idle_animation_map.get(&animation_state) {
-            self.set_animation(idle_animation.clone());
+        let animation_state = Rc::clone(&self.animation_state);
+        let idle_animation_map = Rc::clone(&self.idle_animation_map);
+
+        let state = animation_state.borrow_mut();
+
+        if let Some(s) = idle_animation_map.get(&state) {
+            self.set_animation(s.clone());
             self.play_animation();
         };
     }
@@ -102,7 +101,7 @@ impl Player {
     #[func]
     fn walk_controller(&mut self) {
         let keys = Rc::clone(&self.keys);
-        let key_state = &self.key_state;
+        let key_state = Rc::clone(&self.key_state);
 
         // Stoping logic
         keys.iter().for_each(|k| {
@@ -123,7 +122,7 @@ impl Player {
         });
 
         // Moving logic
-        let count = key_state.borrow().iter().filter(|(_, &v)| v).count();
+        let count = key_state.borrow_mut().iter().filter(|(_, &v)| v).count();
 
         keys.iter().for_each(|k| {
             let state = match key_state.borrow_mut().get(k) {
@@ -162,8 +161,9 @@ impl ICharacterBody2D for Player {
             ]))),
             keys: Rc::new(vec![Key::W, Key::D, Key::S, Key::A]),
             base,
-            animation_node: None,
-            area2d_node: None,
+            animation_node: Rc::new(RefCell::new(None)),
+            collision_shape2d_node: Rc::new(None),
+            area2d: Rc::new(None),
             idle_animation_map: Rc::new(HashMap::from([
                 ("front_walk".into(), "front_idle".into()),
                 ("back_walk".into(), "back_idle".into()),
@@ -175,15 +175,29 @@ impl ICharacterBody2D for Player {
     }
 
     fn ready(&mut self) {
-        let init_animation = self.animation_state.borrow().clone();
+        let collision_shape_node = self
+            .base_mut()
+            .get_node_as::<CollisionShape2D>("CollisionShape2D");
+        self.collision_shape2d_node = Rc::new(Some(collision_shape_node));
 
-        self.init_animation_node();
-        self.set_animation(init_animation);
+        let animation_node = self
+            .base_mut()
+            .get_node_as::<AnimatedSprite2D>("AnimatedSprite2D");
+        self.animation_node = Rc::new(RefCell::new(Some(animation_node)));
 
-        self.init_area2d_node();
+        let init_animation = Rc::clone(&self.animation_state);
+        self.set_animation(init_animation.borrow_mut().clone());
+
+        let area2d_node = self.base_mut().get_node_as::<Area2D>("Area2D");
+        let area = area2d_node.cast::<Area2D>();
+        self.area2d = Rc::new(Some(area));
     }
 
     fn physics_process(&mut self, delta: f64) {
+        let area2d = Rc::clone(&self.area2d);
+        self.base_mut()
+            .emit_signal("on_area2d_entered".into(), &[area2d.to_variant()]);
+
         self.walk_controller();
         self.walk(self.direction * self.speed * delta as f32);
     }
