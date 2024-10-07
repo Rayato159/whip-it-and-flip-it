@@ -17,12 +17,8 @@ pub struct PickUpItem {
 impl PickUpItem {
     #[func]
     fn area2d_entered(&mut self, player_area2d: Gd<Area2D>) {
-        if let Ok(pick_up_item_area2d) = self.base().clone().try_cast::<Area2D>() {
-            if pick_up_item_area2d.overlaps_area(player_area2d) {
-                self.base_mut().queue_free();
-            }
-        } else {
-            return;
+        if self.base().overlaps_area(player_area2d) {
+            self.base_mut().queue_free();
         }
     }
 }
