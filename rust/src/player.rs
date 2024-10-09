@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use godot::classes::{
-    AnimatedSprite2D, Area2D, CharacterBody2D, CollisionShape2D, ICharacterBody2D, InputEvent,
-    InputEventKey,
+    AnimatedSprite2D, Area2D, CanvasLayer, CharacterBody2D, CollisionShape2D, ICharacterBody2D,
+    InputEvent, InputEventKey,
 };
 use godot::global::Key;
 use godot::prelude::*;
@@ -14,8 +14,9 @@ use godot::prelude::*;
 pub struct Player {
     speed: f32,
     direction: Vector2,
-    key_state: Rc<RefCell<HashMap<Key, bool>>>,
-    keys: Rc<Vec<Key>>,
+    walk_key_state: Rc<RefCell<HashMap<Key, bool>>>,
+    walk_keys: Rc<Vec<Key>>,
+    is_invetory_open: bool,
     base: Base<CharacterBody2D>,
     animation_node: Rc<RefCell<Option<Gd<AnimatedSprite2D>>>>,
     collision_shape2d_node: Rc<Option<Gd<CollisionShape2D>>>,
@@ -100,12 +101,12 @@ impl Player {
 
     #[func]
     fn walk_controller(&mut self) {
-        let keys = Rc::clone(&self.keys);
-        let key_state = Rc::clone(&self.key_state);
+        let walk_keys = Rc::clone(&self.walk_keys);
+        let walk_key_state = Rc::clone(&self.walk_key_state);
 
         // Stoping logic
-        keys.iter().for_each(|k| {
-            let state = match key_state.borrow_mut().get(k) {
+        walk_keys.iter().for_each(|k| {
+            let state = match walk_key_state.borrow_mut().get(k) {
                 Some(state) => *state,
                 None => return,
             };
@@ -122,10 +123,14 @@ impl Player {
         });
 
         // Moving logic
-        let count = key_state.borrow_mut().iter().filter(|(_, &v)| v).count();
+        let count = walk_key_state
+            .borrow_mut()
+            .iter()
+            .filter(|(_, &v)| v)
+            .count();
 
-        keys.iter().for_each(|k| {
-            let state = match key_state.borrow_mut().get(k) {
+        walk_keys.iter().for_each(|k| {
+            let state = match walk_key_state.borrow_mut().get(k) {
                 Some(state) => *state,
                 None => return,
             };
@@ -153,13 +158,14 @@ impl ICharacterBody2D for Player {
         Self {
             speed: 180.0,
             direction: Vector2::ZERO,
-            key_state: Rc::new(RefCell::new(HashMap::from([
+            walk_key_state: Rc::new(RefCell::new(HashMap::from([
                 (Key::W, false),
                 (Key::D, false),
                 (Key::S, false),
                 (Key::A, false),
             ]))),
-            keys: Rc::new(vec![Key::W, Key::D, Key::S, Key::A]),
+            walk_keys: Rc::new(vec![Key::W, Key::D, Key::S, Key::A]),
+            is_invetory_open: false,
             base,
             animation_node: Rc::new(RefCell::new(None)),
             collision_shape2d_node: Rc::new(None),
@@ -198,27 +204,36 @@ impl ICharacterBody2D for Player {
         self.base_mut()
             .emit_signal("on_area2d_entered".into(), &[area2d.to_variant()]);
 
-        self.walk_controller();
-        self.walk(self.direction * self.speed * delta as f32);
+        let mut inventory_ui_node = self.base_mut().get_node_as::<CanvasLayer>("InventoryUI");
+        let is_invetory_open = self.is_invetory_open;
+        inventory_ui_node.set_visible(is_invetory_open);
+        if !is_invetory_open {
+            self.walk_controller();
+            self.walk(self.direction * self.speed * delta as f32);
+        }
     }
 
     fn input(&mut self, event: Gd<InputEvent>) {
-        let keys = Rc::clone(&self.keys);
-        let key_state = &self.key_state;
+        let walk_keys = Rc::clone(&self.walk_keys);
+        let walk_key_state = &self.walk_key_state;
 
         if let Ok(e) = event.try_cast::<InputEventKey>() {
             if e.is_pressed() {
-                keys.iter().for_each(|k| {
+                walk_keys.iter().for_each(|k| {
                     if e.get_keycode() == *k {
-                        key_state.borrow_mut().insert(*k, true);
+                        walk_key_state.borrow_mut().insert(*k, true);
                     }
                 });
+
+                if e.get_keycode() == Key::TAB {
+                    self.is_invetory_open = !self.is_invetory_open;
+                }
             }
 
             if e.is_released() {
-                keys.iter().for_each(|k| {
+                walk_keys.iter().for_each(|k| {
                     if e.get_keycode() == *k {
-                        key_state.borrow_mut().insert(*k, false);
+                        walk_key_state.borrow_mut().insert(*k, false);
                     }
                 });
             }
