@@ -212,4 +212,4 @@ shape = ExtResource("2_hjdif")
 [node name="InventoryUI" parent="." instance=ExtResource("3_prusi")]
 visible = false
 
-[node name="Inventory" type="Node" parent="."]
+[node name="Inventory" type="Inventory" parent="."]

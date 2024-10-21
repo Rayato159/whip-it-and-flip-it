@@ -1,6 +1,13 @@
-[gd_scene format=3 uid="uid://hsr824mghrbw"]
+[gd_scene load_steps=4 format=3 uid="uid://hsr824mghrbw"]
 
-[node name="InventoryUI" type="CanvasLayer"]
+[ext_resource type="Texture2D" uid="uid://jroq7kblxsbe" path="res://Assets/Ui/Dialog/DialogBox.png" id="1_80fii"]
+[ext_resource type="FontFile" uid="uid://tcicyvsa66xa" path="res://Assets/Ui/Font/NormalFont.ttf" id="2_c3i77"]
+
+[sub_resource type="Theme" id="Theme_4rkm2"]
+default_font = ExtResource("2_c3i77")
+default_font_size = 0
+
+[node name="InventoryUI" type="InventoryUI"]
 
 [node name="ColorRect" type="ColorRect" parent="."]
 anchors_preset = 15
@@ -9,3 +16,53 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.27451)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 64
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 64
+
+[node name="NinePatchRect" type="NinePatchRect" parent="MarginContainer"]
+layout_mode = 2
+texture = ExtResource("1_80fii")
+region_rect = Rect2(1.25795, 9.01756, 297.984, 47.9575)
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/NinePatchRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/NinePatchRect/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/NinePatchRect/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme = SubResource("Theme_4rkm2")
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 64
+text = "Inventory"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/NinePatchRect/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+columns = 3

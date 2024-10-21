@@ -66,14 +66,5 @@ impl IVBoxContainer for InventorySlot {
         self.on_click_buttion
             .set_disabled(!self.single_button_press);
         self.on_click_buttion.set_visible(self.single_button_press);
-
-        // let mut popup_menu = self.menu_button.get_popup();
-        // if let Some(popup) = &mut popup_menu {
-        //     let id_pressed_callable = self.base().callable("id_pressed");
-        //     popup.connect("on_popup_menu_item_pressed".into(), id_pressed_callable);
-        // }
-
-        // self.base_mut()
-        //     .emit_signal("on_popup_menu_item_pressed".into(), &[]);
     }
 }

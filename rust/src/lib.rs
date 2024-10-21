@@ -1,3 +1,4 @@
+pub mod inventory;
 pub mod item;
 pub mod pick_up_item;
 pub mod player;
