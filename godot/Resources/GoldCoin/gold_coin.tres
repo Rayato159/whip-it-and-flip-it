@@ -6,6 +6,6 @@
 [resource]
 name = "Gold Coin"
 price = 1
-limit = 100
+max_stacks = 2
 collision_shape = ExtResource("1_hbken")
 texture = ExtResource("2_ba1el")

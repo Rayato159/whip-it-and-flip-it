@@ -37,8 +37,17 @@ impl ICanvasLayer for InventoryUI {
 
         self.grid_container.set_columns(self.columns as i32);
 
-        // for _ in 0..self.size {
-        //     self.grid_container.add_child(inventory_slot_node.clone());
-        // }
+        for _ in 0..self.size {
+            let inventory_slot_scene =
+                match load::<PackedScene>("res://Scenes/UI/inventory_slot.tscn").instantiate() {
+                    Some(scene) => scene,
+                    None => {
+                        godot_error!("Failed to load inventory slot scene");
+                        return;
+                    }
+                };
+
+            self.grid_container.add_child(inventory_slot_scene.clone());
+        }
     }
 }

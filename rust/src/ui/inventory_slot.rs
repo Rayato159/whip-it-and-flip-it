@@ -38,11 +38,11 @@ pub struct InventorySlot {
     texture_rect: OnReady<Gd<TextureRect>>,
     #[init(node = "NameLabel")]
     name_label: OnReady<Gd<Label>>,
-    #[init(node = "StackLabel")]
+    #[init(node = "NinePatchRect/StackLabel")]
     stack_label: OnReady<Gd<Label>>,
     #[init(node = "PriceLabel")]
     price_label: OnReady<Gd<Label>>,
-    #[init(node = "OnClickButton")]
+    #[init(node = "NinePatchRect/OnClickButton")]
     on_click_buttion: OnReady<Gd<Button>>,
     #[init(node = "NinePatchRect/MenuButton")]
     menu_button: OnReady<Gd<MenuButton>>,
