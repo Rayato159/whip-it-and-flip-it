@@ -4,8 +4,8 @@
 [ext_resource type="Texture2D" uid="uid://cg2cwjxitmqkc" path="res://Assets/Items/Treasure/GoldCoin.png" id="2_ba1el"]
 
 [resource]
-name = "Gold Coin"
+name = "Gold"
 price = 1
-max_stacks = 2
 collision_shape = ExtResource("1_hbken")
 texture = ExtResource("2_ba1el")
+stacks = 44

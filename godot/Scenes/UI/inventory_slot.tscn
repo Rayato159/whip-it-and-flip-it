@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://c8n6ya0hvkw83"]
+[gd_scene load_steps=3 format=3 uid="uid://c8n6ya0hvkw83"]
 
 [ext_resource type="Texture2D" uid="uid://csl1aovsoxmct" path="res://Assets/Ui/Dialog/FacesetBox.png" id="1_ug2vn"]
+[ext_resource type="Theme" uid="uid://mvt5xhn6ljcp" path="res://Resources/UI/theme.tres" id="2_pbe8s"]
 
 [node name="InventorySlot" type="InventorySlot"]
 offset_right = 60.0
@@ -38,10 +39,12 @@ expand_mode = 2
 stretch_mode = 5
 
 [node name="OnClickButton" type="Button" parent="NinePatchRect"]
+visible = false
 custom_minimum_size = Vector2(60, 60)
 layout_mode = 0
 offset_right = 8.0
 offset_bottom = 8.0
+disabled = true
 
 [node name="StackLabel" type="Label" parent="NinePatchRect"]
 layout_mode = 1
@@ -56,7 +59,12 @@ offset_right = -6.0
 
 [node name="NameLabel" type="Label" parent="."]
 layout_mode = 2
+theme = ExtResource("2_pbe8s")
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="PriceLabel" type="Label" parent="."]
 visible = false
 layout_mode = 2
+theme = ExtResource("2_pbe8s")

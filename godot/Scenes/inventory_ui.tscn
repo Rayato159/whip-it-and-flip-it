@@ -1,11 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://hsr824mghrbw"]
+[gd_scene load_steps=3 format=3 uid="uid://hsr824mghrbw"]
 
 [ext_resource type="Texture2D" uid="uid://jroq7kblxsbe" path="res://Assets/Ui/Dialog/DialogBox.png" id="1_80fii"]
-[ext_resource type="FontFile" uid="uid://tcicyvsa66xa" path="res://Assets/Ui/Font/NormalFont.ttf" id="2_c3i77"]
-
-[sub_resource type="Theme" id="Theme_4rkm2"]
-default_font = ExtResource("2_c3i77")
-default_font_size = 0
+[ext_resource type="Theme" uid="uid://mvt5xhn6ljcp" path="res://Resources/UI/theme.tres" id="2_1rds6"]
 
 [node name="InventoryUI" type="InventoryUI"]
 
@@ -54,7 +50,7 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="MarginContainer/NinePatchRect/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme = SubResource("Theme_4rkm2")
+theme = ExtResource("2_1rds6")
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 64
 text = "Inventory"

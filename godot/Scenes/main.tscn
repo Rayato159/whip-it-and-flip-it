@@ -24,6 +24,12 @@ tile_set = ExtResource("1_wqacm")
 [node name="PickUpItem" parent="." instance=ExtResource("3_xcux7")]
 position = Vector2(-121, 89)
 
+[node name="PickUpItem2" parent="." instance=ExtResource("3_xcux7")]
+position = Vector2(-97, 67)
+
+[node name="PickUpItem3" parent="." instance=ExtResource("3_xcux7")]
+position = Vector2(-88, 109)
+
 [node name="Player" parent="." instance=ExtResource("2_3nuel")]
 position = Vector2(-156, 76)
 

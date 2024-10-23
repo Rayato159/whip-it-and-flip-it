@@ -12,11 +12,16 @@ pub enum SlotType {
     NotEquippable,
 }
 
-// #[godot_api]
-// impl InventorySlot {
-//     #[signal]
-//     fn on_popup_menu_item_pressed(&mut self);
-// }
+impl SlotType {
+    pub fn to_gd_string(&self) -> GString {
+        match self {
+            SlotType::RightHand => "RightHand".into(),
+            SlotType::LeftHand => "LeftHand".into(),
+            SlotType::Potions => "Potions".into(),
+            SlotType::NotEquippable => "NotEquippable".into(),
+        }
+    }
+}
 
 #[derive(GodotClass)]
 #[class(tool, init, base=VBoxContainer)]
@@ -34,20 +39,24 @@ pub struct InventorySlot {
     starting_texture: Option<Gd<Texture2D>>,
     #[export]
     starting_label: GString,
+    #[var]
     #[init(node = "NinePatchRect/MenuButton/CenterContainer/TextureRect")]
     texture_rect: OnReady<Gd<TextureRect>>,
+    #[var]
     #[init(node = "NameLabel")]
     name_label: OnReady<Gd<Label>>,
+    #[var]
     #[init(node = "NinePatchRect/StackLabel")]
     stack_label: OnReady<Gd<Label>>,
+    #[var]
     #[init(node = "PriceLabel")]
     price_label: OnReady<Gd<Label>>,
+    #[var]
     #[init(node = "NinePatchRect/OnClickButton")]
-    on_click_buttion: OnReady<Gd<Button>>,
+    on_click_button: OnReady<Gd<Button>>,
+    #[var]
     #[init(node = "NinePatchRect/MenuButton")]
     menu_button: OnReady<Gd<MenuButton>>,
-    #[init(val = SlotType::NotEquippable)]
-    slot_to_equip: SlotType,
     base: Base<VBoxContainer>,
 }
 
@@ -63,8 +72,7 @@ impl IVBoxContainer for InventorySlot {
         }
 
         self.menu_button.set_disabled(self.single_button_press);
-        self.on_click_buttion
-            .set_disabled(!self.single_button_press);
-        self.on_click_buttion.set_visible(self.single_button_press);
+        self.on_click_button.set_disabled(!self.single_button_press);
+        self.on_click_button.set_visible(self.single_button_press);
     }
 }

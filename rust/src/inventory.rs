@@ -4,7 +4,11 @@ use godot::{
     prelude::*,
 };
 
-use crate::{item::Item, pick_up_item::PickUpItem, ui::inventory_ui::InventoryUI};
+use crate::{
+    item::{self, Item},
+    pick_up_item::PickUpItem,
+    ui::inventory_ui::InventoryUI,
+};
 
 #[derive(GodotClass)]
 #[class(tool, init, base=Node)]
@@ -22,12 +26,18 @@ impl Inventory {
     #[signal]
     fn on_toggle(&mut self);
 
+    #[signal]
+    fn on_add_item(&mut self, item_gd: Gd<Item>);
+
     #[func]
     fn add_item(&mut self, item_gd: Gd<Item>, stacks: i64) {
         if stacks > 0 && item_gd.bind().get_max_stacks() > 1 {
             self.add_stackable_item_into_inventory(item_gd.clone(), stacks);
         } else {
-            self.items.extend_array(&array![Some(item_gd)]);
+            self.items.extend_array(&array![Some(item_gd.clone())]);
+
+            self.base_mut()
+                .emit_signal("on_add_item".into(), &[item_gd.clone().to_variant()]);
         }
     }
 
@@ -62,14 +72,18 @@ impl Inventory {
                         .set(item_index.unwrap(), Some(inventory_item_gd.clone()));
 
                     if let Some(inventory_item_gd_dub) = inventory_item_gd.duplicate() {
-                        let mut new_item_gd = inventory_item_gd_dub.try_cast::<Item>().unwrap();
+                        let mut new_item_gd =
+                            inventory_item_gd_dub.clone().try_cast::<Item>().unwrap();
 
                         let stacks_diff = inventory_item_gd.bind().get_stacks() + stacks
                             - item_gd.bind().get_max_stacks();
 
                         new_item_gd.bind_mut().set_stacks(stacks_diff);
 
-                        self.items.extend(array![Some(new_item_gd)].iter_shared());
+                        self.items
+                            .extend(array![Some(new_item_gd.clone())].iter_shared());
+                        self.base_mut()
+                            .emit_signal("on_add_item".into(), &[new_item_gd.to_variant()]);
                     };
                 }
             };
@@ -78,7 +92,11 @@ impl Inventory {
                 let mut new_item_gd = new_item_gd_dub.try_cast::<Item>().unwrap();
                 new_item_gd.bind_mut().set_stacks(stacks);
 
-                self.items.extend(array![Some(new_item_gd)].iter_shared());
+                self.items
+                    .extend(array![Some(new_item_gd.clone())].iter_shared());
+
+                self.base_mut()
+                    .emit_signal("on_add_item".into(), &[new_item_gd.to_variant()]);
             };
         }
     }
@@ -91,7 +109,17 @@ impl INode for Inventory {
             .base_mut()
             .get_node_as::<PickUpItem>("../../PickUpItem");
         let add_item_callable = self.base().callable("add_item");
-        pick_up_item_node.connect("on_add_item".into(), add_item_callable);
+        pick_up_item_node.connect("on_add_item".into(), add_item_callable.clone());
+
+        let mut pick_up_item_node_2 = self
+            .base_mut()
+            .get_node_as::<PickUpItem>("../../PickUpItem2");
+        pick_up_item_node_2.connect("on_add_item".into(), add_item_callable.clone());
+
+        let mut pick_up_item_node_3 = self
+            .base_mut()
+            .get_node_as::<PickUpItem>("../../PickUpItem3");
+        pick_up_item_node_3.connect("on_add_item".into(), add_item_callable);
     }
 
     fn input(&mut self, event: Gd<InputEvent>) {

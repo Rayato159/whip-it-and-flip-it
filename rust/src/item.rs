@@ -3,6 +3,8 @@ use godot::{
     prelude::*,
 };
 
+use crate::ui::inventory_slot::SlotType;
+
 #[derive(GodotClass)]
 #[class(tool, init, base=Resource)]
 pub struct Item {
@@ -22,5 +24,8 @@ pub struct Item {
     #[export]
     #[init(val = 1)]
     stacks: i64,
+    #[export]
+    #[init(val = SlotType::NotEquippable)]
+    slot_type: SlotType,
     base: Base<Resource>,
 }
