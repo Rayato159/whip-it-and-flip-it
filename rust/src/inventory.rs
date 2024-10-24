@@ -25,6 +25,9 @@ impl Inventory {
     #[signal]
     fn on_add_item(&mut self, item_gd: Gd<Item>);
 
+    #[signal]
+    fn on_update_stacks_label(&mut self, item_gd: Gd<Item>, stacks: i64);
+
     #[func]
     fn add_item(&mut self, item_gd: Gd<Item>) {
         if item_gd.bind().get_stacks() > 0 && item_gd.bind().get_max_stacks() > 1 {
@@ -51,7 +54,7 @@ impl Inventory {
         }
 
         // If the item is found in the inventory
-        if !item_index.is_none() {
+        if item_index.is_some() {
             if let Some(mut inventory_item_gd) = self.items.at(item_index.unwrap()) {
                 if inventory_item_gd.bind().get_stacks() + item_gd.bind().get_stacks()
                     <= item_gd.bind().get_max_stacks()
@@ -60,38 +63,48 @@ impl Inventory {
                         inventory_item_gd.bind().get_stacks() + item_gd.bind().get_stacks();
 
                     inventory_item_gd.bind_mut().set_stacks(new_stacks);
-                } else {
-                    if let Some(inventory_item_gd_dub) = inventory_item_gd.duplicate() {
-                        let stacks_diff = (item_gd.bind().get_stacks()
-                            + inventory_item_gd.bind().get_stacks())
-                            - item_gd.bind().get_max_stacks();
 
-                        if let Ok(mut new_item_gd) =
-                            inventory_item_gd_dub.clone().try_cast::<Item>()
-                        {
-                            new_item_gd.bind_mut().set_stacks(stacks_diff);
+                    self.base_mut().emit_signal(
+                        "on_update_stacks_label".into(),
+                        &[
+                            inventory_item_gd.clone().to_variant(),
+                            new_stacks.to_variant(),
+                        ],
+                    );
+                } else if let Some(inventory_item_gd_dub) = inventory_item_gd.duplicate() {
+                    self.base_mut().emit_signal(
+                        "on_update_stacks_label".into(),
+                        &[
+                            inventory_item_gd.clone().to_variant(),
+                            item_gd.bind().get_max_stacks().to_variant(),
+                        ],
+                    );
 
-                            self.items
-                                .extend(array![Some(new_item_gd.clone())].iter_shared());
-                            self.base_mut()
-                                .emit_signal("on_add_item".into(), &[new_item_gd.to_variant()]);
-                        };
+                    let stacks_diff = (item_gd.bind().get_stacks()
+                        + inventory_item_gd.bind().get_stacks())
+                        - item_gd.bind().get_max_stacks();
+
+                    if let Ok(mut new_item_gd) = inventory_item_gd_dub.clone().try_cast::<Item>() {
+                        new_item_gd.bind_mut().set_stacks(stacks_diff);
+
+                        self.items
+                            .extend(array![Some(new_item_gd.clone())].iter_shared());
+                        self.base_mut()
+                            .emit_signal("on_add_item".into(), &[new_item_gd.to_variant()]);
                     };
                 }
             };
-        } else {
-            if let Some(new_item_gd_dub) = item_gd.duplicate() {
-                let mut new_item_gd = new_item_gd_dub.try_cast::<Item>().unwrap();
-                new_item_gd
-                    .bind_mut()
-                    .set_stacks(item_gd.bind().get_stacks());
+        } else if let Some(new_item_gd_dub) = item_gd.duplicate() {
+            let mut new_item_gd = new_item_gd_dub.try_cast::<Item>().unwrap();
+            new_item_gd
+                .bind_mut()
+                .set_stacks(item_gd.bind().get_stacks());
 
-                self.items
-                    .extend(array![Some(new_item_gd.clone())].iter_shared());
+            self.items
+                .extend(array![Some(new_item_gd.clone())].iter_shared());
 
-                self.base_mut()
-                    .emit_signal("on_add_item".into(), &[new_item_gd.to_variant()]);
-            };
+            self.base_mut()
+                .emit_signal("on_add_item".into(), &[new_item_gd.to_variant()]);
         }
     }
 }
@@ -118,10 +131,8 @@ impl INode for Inventory {
 
     fn input(&mut self, event: Gd<InputEvent>) {
         if let Ok(e) = event.try_cast::<InputEventKey>() {
-            if e.is_pressed() {
-                if e.get_keycode() == Key::TAB {
-                    self.base_mut().emit_signal("on_toggle".into(), &[]);
-                }
+            if e.is_pressed() && e.get_keycode() == Key::TAB {
+                self.base_mut().emit_signal("on_toggle".into(), &[]);
             }
         }
     }

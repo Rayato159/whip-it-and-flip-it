@@ -32,7 +32,7 @@ impl InventoryUI {
 
     #[func]
     fn add_item(&mut self, item_gd: Gd<Item>) {
-        let empty_slot_index = self.get_empty_slot();
+        let empty_slot_index = self.get_empty_slot_index();
 
         if let Ok(mut slot_gd) = self
             .grid_container
@@ -77,11 +77,40 @@ impl InventoryUI {
     }
 
     #[func]
-    fn get_empty_slot(&mut self) -> i32 {
+    fn update_stacks_label(&mut self, item_gd: Gd<Item>, stacks: i64) {
+        let slot_index = self.get_item_slot_index_by_name(item_gd.bind().get_name().clone());
+
+        if let Ok(mut slot_gd) = self
+            .grid_container
+            .get_children()
+            .at(slot_index as usize)
+            .try_cast::<InventorySlot>()
+        {
+            let mut stack_label = slot_gd.bind().get_stack_label().clone();
+            stack_label.set_text(stacks.to_string().into());
+            slot_gd.bind_mut().set_stack_label(stack_label);
+        }
+    }
+
+    #[func]
+    fn get_empty_slot_index(&mut self) -> i32 {
         for slot_index in 0..self.grid_container.get_children().len() - 1 {
             let slot_node = self.grid_container.get_children().at(slot_index);
             if let Ok(s) = slot_node.try_cast::<InventorySlot>() {
                 if s.bind().get_is_empty() {
+                    return slot_index as i32;
+                }
+            }
+        }
+        -1
+    }
+
+    #[func]
+    fn get_item_slot_index_by_name(&mut self, name: GString) -> i32 {
+        for slot_index in 0..self.grid_container.get_children().len() - 1 {
+            let slot_node = self.grid_container.get_children().at(slot_index);
+            if let Ok(s) = slot_node.try_cast::<InventorySlot>() {
+                if !s.bind().get_is_empty() && s.bind().get_name_label().get_text() == name {
                     return slot_index as i32;
                 }
             }
@@ -106,8 +135,13 @@ impl ICanvasLayer for InventoryUI {
         self.inventory_node = Some(inventory_node.clone());
         let toggle_callable = self.base().callable("toggle");
         let add_item_callable = self.base().callable("add_item");
+        let update_stacks_label_callable = self.base().callable("update_stacks_label");
         inventory_node.connect("on_toggle".into(), toggle_callable);
         inventory_node.connect("on_add_item".into(), add_item_callable);
+        inventory_node.connect(
+            "on_update_stacks_label".into(),
+            update_stacks_label_callable,
+        );
 
         self.grid_container.set_columns(self.columns as i32);
 
