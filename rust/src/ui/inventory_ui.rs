@@ -33,6 +33,7 @@ impl InventoryUI {
     #[func]
     fn add_item(&mut self, item_gd: Gd<Item>) {
         let empty_slot_index = self.get_empty_slot();
+
         if let Ok(mut slot_gd) = self
             .grid_container
             .get_children()

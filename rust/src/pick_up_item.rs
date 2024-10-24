@@ -19,16 +19,14 @@ pub struct PickUpItem {
 #[godot_api]
 impl PickUpItem {
     #[signal]
-    fn on_add_item(&mut self, item_gd: Gd<Item>, stacks: i64);
+    fn on_add_item(&mut self, item_gd: Gd<Item>);
 
     #[func]
     fn area2d_entered(&mut self, player_area2d: Gd<Area2D>) {
         if self.base().overlaps_area(player_area2d) {
             if let Some(item) = self.get_item() {
-                self.base_mut().emit_signal(
-                    "on_add_item".into(),
-                    &[item.to_variant(), item.bind().get_stacks().to_variant()],
-                );
+                self.base_mut()
+                    .emit_signal("on_add_item".into(), &[item.to_variant()]);
 
                 self.base_mut().queue_free();
             };

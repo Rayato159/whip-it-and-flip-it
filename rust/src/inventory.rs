@@ -4,11 +4,7 @@ use godot::{
     prelude::*,
 };
 
-use crate::{
-    item::{self, Item},
-    pick_up_item::PickUpItem,
-    ui::inventory_ui::InventoryUI,
-};
+use crate::{item::Item, pick_up_item::PickUpItem, ui::inventory_ui::InventoryUI};
 
 #[derive(GodotClass)]
 #[class(tool, init, base=Node)]
@@ -30,9 +26,9 @@ impl Inventory {
     fn on_add_item(&mut self, item_gd: Gd<Item>);
 
     #[func]
-    fn add_item(&mut self, item_gd: Gd<Item>, stacks: i64) {
-        if stacks > 0 && item_gd.bind().get_max_stacks() > 1 {
-            self.add_stackable_item_into_inventory(item_gd.clone(), stacks);
+    fn add_item(&mut self, item_gd: Gd<Item>) {
+        if item_gd.bind().get_stacks() > 0 && item_gd.bind().get_max_stacks() > 1 {
+            self.add_stackable_item_into_inventory(item_gd.clone());
         } else {
             self.items.extend_array(&array![Some(item_gd.clone())]);
 
@@ -42,7 +38,7 @@ impl Inventory {
     }
 
     #[func]
-    fn add_stackable_item_into_inventory(&mut self, item_gd: Gd<Item>, stacks: i64) {
+    fn add_stackable_item_into_inventory(&mut self, item_gd: Gd<Item>) {
         let mut item_index: Option<usize> = None;
 
         // Reverse searching for the item in the inventory
@@ -57,40 +53,40 @@ impl Inventory {
         // If the item is found in the inventory
         if !item_index.is_none() {
             if let Some(mut inventory_item_gd) = self.items.at(item_index.unwrap()) {
-                if inventory_item_gd.bind().get_stacks() + stacks <= item_gd.bind().get_max_stacks()
+                if inventory_item_gd.bind().get_stacks() + item_gd.bind().get_stacks()
+                    <= item_gd.bind().get_max_stacks()
                 {
-                    let new_stacks = inventory_item_gd.bind().get_stacks() + stacks;
+                    let new_stacks =
+                        inventory_item_gd.bind().get_stacks() + item_gd.bind().get_stacks();
+
                     inventory_item_gd.bind_mut().set_stacks(new_stacks);
-
-                    self.items.set(item_index.unwrap(), Some(inventory_item_gd));
                 } else {
-                    inventory_item_gd
-                        .bind_mut()
-                        .set_stacks(item_gd.bind().get_max_stacks());
-
-                    self.items
-                        .set(item_index.unwrap(), Some(inventory_item_gd.clone()));
-
                     if let Some(inventory_item_gd_dub) = inventory_item_gd.duplicate() {
-                        let mut new_item_gd =
-                            inventory_item_gd_dub.clone().try_cast::<Item>().unwrap();
-
-                        let stacks_diff = inventory_item_gd.bind().get_stacks() + stacks
+                        let stacks_diff = (item_gd.bind().get_stacks()
+                            + inventory_item_gd.bind().get_stacks())
                             - item_gd.bind().get_max_stacks();
 
-                        new_item_gd.bind_mut().set_stacks(stacks_diff);
+                        godot_print!("Stacks diff: {}", stacks_diff);
 
-                        self.items
-                            .extend(array![Some(new_item_gd.clone())].iter_shared());
-                        self.base_mut()
-                            .emit_signal("on_add_item".into(), &[new_item_gd.to_variant()]);
+                        if let Ok(mut new_item_gd) =
+                            inventory_item_gd_dub.clone().try_cast::<Item>()
+                        {
+                            new_item_gd.bind_mut().set_stacks(stacks_diff);
+
+                            self.items
+                                .extend(array![Some(new_item_gd.clone())].iter_shared());
+                            self.base_mut()
+                                .emit_signal("on_add_item".into(), &[new_item_gd.to_variant()]);
+                        };
                     };
                 }
             };
         } else {
             if let Some(new_item_gd_dub) = item_gd.duplicate() {
                 let mut new_item_gd = new_item_gd_dub.try_cast::<Item>().unwrap();
-                new_item_gd.bind_mut().set_stacks(stacks);
+                new_item_gd
+                    .bind_mut()
+                    .set_stacks(item_gd.bind().get_stacks());
 
                 self.items
                     .extend(array![Some(new_item_gd.clone())].iter_shared());
