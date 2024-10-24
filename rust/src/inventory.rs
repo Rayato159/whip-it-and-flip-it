@@ -66,8 +66,6 @@ impl Inventory {
                             + inventory_item_gd.bind().get_stacks())
                             - item_gd.bind().get_max_stacks();
 
-                        godot_print!("Stacks diff: {}", stacks_diff);
-
                         if let Ok(mut new_item_gd) =
                             inventory_item_gd_dub.clone().try_cast::<Item>()
                         {
